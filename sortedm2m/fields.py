@@ -92,11 +92,13 @@ def create_sorted_many_to_many_intermediate_model(field, klass):
         else:
             from django.db.utils import ProgrammingError, OperationalError
             try:
+                sid = transaction.savepoint()
                 # We need to catch if the model is not yet migrated in the
                 # database. The default function is still called in this case while
                 # running the migration. So we mock the return value of 0.
                 return model._default_manager.count()
             except (ProgrammingError, OperationalError):
+                transaction.savepoint_rollback(sid)
                 return 0
 
     default_sort_value = curry(default_sort_value, name)
